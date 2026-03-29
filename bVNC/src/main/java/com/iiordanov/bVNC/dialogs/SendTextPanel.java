@@ -29,6 +29,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.iiordanov.bVNC.Database;
+import com.iiordanov.bVNC.KeyInterceptAccessibilityService;
 import com.iiordanov.bVNC.SentTextBean;
 import com.undatech.remoteClientUi.R;
 
@@ -82,6 +83,8 @@ public class SendTextPanel extends LinearLayout {
     public void initialize(Callback callback) {
 
         textEnterText = findViewById(R.id.textEnterText);
+        textEnterText.setOnFocusChangeListener((v, hasFocus) ->
+                KeyInterceptAccessibilityService.setClipboardFocused(hasFocus));
         buttonNextEntry = findViewById(R.id.buttonNextEntry);
         buttonPreviousEntry = findViewById(R.id.buttonPreviousEntry);
 

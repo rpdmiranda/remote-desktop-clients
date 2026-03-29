@@ -913,6 +913,10 @@ Below that is where you configure your connection.
     <string name="rdp_adv_glyph_cache">Enable Glyph Cache</string>
     <string name="more_debug_logging">More Debug Logging</string>
     <string name="prefer_sending_unicode">Unicode input (Windows only)</string>
+    <string name="use_accessibility_key_intercept">Accessibility key intercept</string>
+    <string name="use_accessibility_key_intercept_summary">Intercept physical keyboard events via Accessibility Service. Must be enabled in Android Settings \u2192 Accessibility. Required when Unicode input is disabled.</string>
+    <string name="accessibility_service_label">Keyboard Intercept</string>
+    <string name="accessibility_service_description">Intercepts physical keyboard events to forward them to the remote desktop session. Required for full keyboard support in Samsung DeX and desktop mode.</string>
     <string name="hide_connection_thumbnails">Hide Connection Thumbnails</string>
     <string name="show_only_connection_nicknames">Show Only Connection Nicknames</string>
     <string name="love_our_work">Love our work?</string>

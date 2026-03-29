@@ -80,6 +80,7 @@ import com.iiordanov.bVNC.dialogs.EnterTextDialog;
 import com.iiordanov.bVNC.dialogs.MetaKeyDialog;
 import com.iiordanov.bVNC.extrakeys.ExtraKeysView;
 import com.iiordanov.bVNC.extrakeys.ExtraKeysPagerAdapter;
+import com.iiordanov.bVNC.input.KeyInterceptCallback;
 import com.iiordanov.bVNC.input.IgnoringMouseInputListener;
 import com.iiordanov.bVNC.input.MetaKeyBean;
 import com.iiordanov.bVNC.input.Panner;
@@ -114,7 +115,7 @@ import java.util.TimerTask;
 
 @SuppressLint("ClickableViewAccessibility")
 public class RemoteCanvasActivity extends AppCompatActivity implements
-        SelectTextElementFragment.OnFragmentDismissedListener, TouchInputDelegate {
+        SelectTextElementFragment.OnFragmentDismissedListener, TouchInputDelegate, KeyInterceptCallback {
 
     public static final int[] inputModeIds = {R.id.itemInputTouchpad,
             R.id.itemInputTouchPanZoomMouse,
@@ -269,6 +270,19 @@ public class RemoteCanvasActivity extends AppCompatActivity implements
         canvas.setForegrounded(hasFocus);
         if (hasFocus) {
             controlImmersive();
+            boolean unicodeEnabled = Utils.querySharedPreferenceBoolean(
+                    this, Constants.preferSendingUnicode, Constants.preferSendingUnicodeDefaultValue);
+            boolean accessibilityEnabled = Utils.querySharedPreferenceBoolean(
+                    this, Constants.useAccessibilityKeyIntercept);
+            if (accessibilityEnabled && unicodeEnabled) {
+                Utils.setSharedPreferenceBoolean(this, Constants.useAccessibilityKeyIntercept, false);
+                accessibilityEnabled = false;
+            }
+            if (accessibilityEnabled) {
+                KeyInterceptAccessibilityService.setCallback(this);
+            }
+        } else {
+            KeyInterceptAccessibilityService.setCallback(null);
         }
     }
 
@@ -841,6 +855,7 @@ public class RemoteCanvasActivity extends AppCompatActivity implements
     protected void onPause() {
         super.onPause();
         Log.i(TAG, "onPause called.");
+        KeyInterceptAccessibilityService.setCallback(null);
         try {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(canvas.getWindowToken(), 0);
@@ -858,6 +873,14 @@ public class RemoteCanvasActivity extends AppCompatActivity implements
         } catch (NullPointerException e) {
             Log.d(TAG, "Ignoring NullPointerException during onResume");
         }
+    }
+
+    @Override
+    public boolean onInterceptedKeyEvent(KeyEvent event) {
+        if (inputListener != null) {
+            return inputListener.onKey(canvas, event.getKeyCode(), event);
+        }
+        return false;
     }
 
     /**
