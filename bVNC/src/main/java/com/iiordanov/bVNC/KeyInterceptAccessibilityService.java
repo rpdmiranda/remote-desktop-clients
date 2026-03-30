@@ -41,6 +41,20 @@ public class KeyInterceptAccessibilityService extends AccessibilityService {
             return false;
         }
 
+        int metaState = event.getMetaState();
+        boolean altPressed = (metaState & KeyEvent.META_ALT_ON) != 0;
+        boolean metaPressed = (metaState & KeyEvent.META_META_ON) != 0;
+
+        if (!altPressed && !metaPressed) {
+            return false;
+        }
+
+        int keyCode = event.getKeyCode();
+        if (keyCode == KeyEvent.KEYCODE_ALT_LEFT || keyCode == KeyEvent.KEYCODE_ALT_RIGHT
+                || keyCode == KeyEvent.KEYCODE_META_LEFT || keyCode == KeyEvent.KEYCODE_META_RIGHT) {
+            return false;
+        }
+
         Log.d(TAG, "onKeyEvent: " + event);
         return callback.onInterceptedKeyEvent(event);
     }

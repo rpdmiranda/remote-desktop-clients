@@ -60,21 +60,22 @@ public class aRDP extends MainConfiguration {
     private EditText rdpGatewayDomain;
     private EditText rdpGatewayPassword;
     private CheckBox checkboxKeepRdpGatewayPassword;
-    private MaterialButtonToggleGroup groupRemoteSoundType;
-    private CompoundButton checkboxEnableRecording;
-    private CompoundButton checkboxConsoleMode;
-    private CompoundButton checkboxRedirectSdCard;
-    private CompoundButton checkboxRemoteFx;
-    private CompoundButton checkboxDesktopBackground;
-    private CompoundButton checkboxFontSmoothing;
-    private CompoundButton checkboxDesktopComposition;
-    private CompoundButton checkboxWindowContents;
-    private CompoundButton checkboxMenuAnimation;
-    private CompoundButton checkboxVisualStyles;
-    private CompoundButton checkboxEnableGfx;
-    private CompoundButton checkboxEnableGfxH264;
-    private CompoundButton checkboxEnableGlyphCache;
-    private CompoundButton checkboxPreferSendingUnicode;
+    private RadioGroup groupRemoteSoundType;
+    private CheckBox checkboxEnableRecording;
+    private CheckBox checkboxConsoleMode;
+    private CheckBox checkboxRedirectSdCard;
+    private CheckBox checkboxRemoteFx;
+    private CheckBox checkboxDesktopBackground;
+    private CheckBox checkboxFontSmoothing;
+    private CheckBox checkboxDesktopComposition;
+    private CheckBox checkboxWindowContents;
+    private CheckBox checkboxMenuAnimation;
+    private CheckBox checkboxVisualStyles;
+    private CheckBox checkboxEnableGfx;
+    private CheckBox checkboxEnableGfxH264;
+    private CheckBox checkboxEnableGlyphCache;
+    private CheckBox checkboxPreferSendingUnicode;
+    private CheckBox checkboxUseAccessibilityKeyIntercept;
     private Spinner spinnerRdpColor;
     private Spinner spinnerRdpSecurity;
     private List<String> rdpColorArray;
@@ -92,6 +93,19 @@ public class aRDP extends MainConfiguration {
         initializeRdpResolutionSpinner();
         initializeRdpSecuritySpinner();
         initializeAdvancedSettings();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (checkboxUseAccessibilityKeyIntercept != null
+                && checkboxUseAccessibilityKeyIntercept.isChecked()
+                && !AccessibilityServiceHelper.isServiceEnabled(this)) {
+            AccessibilityServiceHelper.showRequiredDialog(this, () -> {
+                checkboxUseAccessibilityKeyIntercept.setChecked(false);
+                Utils.setSharedPreferenceBoolean(this, Constants.useAccessibilityKeyIntercept, false);
+            });
+        }
     }
 
     private void initializeRdpSpecificConnectionParameters() {
@@ -148,6 +162,21 @@ public class aRDP extends MainConfiguration {
         checkboxEnableGfxH264 = findViewById(R.id.checkboxEnableGfxH264);
         checkboxEnableGlyphCache = findViewById(R.id.checkboxEnableGlyphCache);
         checkboxPreferSendingUnicode = findViewById(R.id.checkboxPreferSendingUnicode);
+        checkboxUseAccessibilityKeyIntercept = findViewById(R.id.checkboxUseAccessibilityKeyIntercept);
+
+        checkboxPreferSendingUnicode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            checkboxUseAccessibilityKeyIntercept.setEnabled(!isChecked);
+            if (isChecked) {
+                checkboxUseAccessibilityKeyIntercept.setChecked(false);
+            }
+        });
+
+        checkboxUseAccessibilityKeyIntercept.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked && !AccessibilityServiceHelper.isServiceEnabled(this)) {
+                AccessibilityServiceHelper.showRequiredDialog(this, () ->
+                        checkboxUseAccessibilityKeyIntercept.setChecked(false));
+            }
+        });
     }
 
     private void initializeRdpResolutionSpinner() {
@@ -264,6 +293,10 @@ public class aRDP extends MainConfiguration {
         checkboxEnableGfxH264.setChecked(selected.getEnableGfxH264());
         checkboxEnableGlyphCache.setChecked(selected.getEnableGlyphCache());
         checkboxPreferSendingUnicode.setChecked(selected.getPreferSendingUnicode());
+        boolean accessibilityEnabled = Utils.querySharedPreferenceBoolean(
+                this, Constants.useAccessibilityKeyIntercept);
+        checkboxUseAccessibilityKeyIntercept.setChecked(accessibilityEnabled);
+        checkboxUseAccessibilityKeyIntercept.setEnabled(!selected.getPreferSendingUnicode());
     }
 
     protected void updateSelectedFromView() {
@@ -313,6 +346,8 @@ public class aRDP extends MainConfiguration {
         selected.setEnableGfxH264(checkboxEnableGfxH264.isChecked());
         selected.setEnableGlyphCache(checkboxEnableGlyphCache.isChecked());
         selected.setPreferSendingUnicode(checkboxPreferSendingUnicode.isChecked());
+        Utils.setSharedPreferenceBoolean(this, Constants.useAccessibilityKeyIntercept,
+                checkboxUseAccessibilityKeyIntercept.isChecked());
     }
 
     /**

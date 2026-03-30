@@ -123,6 +123,7 @@ public class RemoteCanvasActivity extends AppCompatActivity implements
             R.id.itemInputSingleHanded};
     public static final Map<Integer, String> inputModeMap;
     private final static String TAG = "RemoteCanvasActivity";
+    private boolean accessibilityDialogShown = false;
     private static final int[] scalingModeIds = {R.id.itemZoomable, R.id.itemFitToScreen,
             R.id.itemOneToOne};
 
@@ -280,6 +281,12 @@ public class RemoteCanvasActivity extends AppCompatActivity implements
             }
             if (accessibilityEnabled) {
                 KeyInterceptAccessibilityService.setCallback(this);
+                if (!accessibilityDialogShown && !AccessibilityServiceHelper.isServiceEnabled(this)) {
+                    accessibilityDialogShown = true;
+                    AccessibilityServiceHelper.showRequiredDialog(this, () -> {
+                        // Continue without: callback stays registered in case user enables later
+                    });
+                }
             }
         } else {
             KeyInterceptAccessibilityService.setCallback(null);

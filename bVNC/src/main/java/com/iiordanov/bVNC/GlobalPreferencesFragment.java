@@ -1,5 +1,6 @@
 package com.iiordanov.bVNC;
 
+import android.app.Activity;
 import android.os.Bundle;
 
 import androidx.preference.PreferenceFragmentCompat;
@@ -8,6 +9,9 @@ import androidx.preference.SwitchPreferenceCompat;
 import com.undatech.remoteClientUi.R;
 
 public class GlobalPreferencesFragment extends PreferenceFragmentCompat {
+
+    private SwitchPreferenceCompat accessibilityPref;
+
     @Override
     public void onCreatePreferences(Bundle bundle, String s) {
         getPreferenceManager().setSharedPreferencesName(Constants.generalSettingsTag);
@@ -22,20 +26,44 @@ public class GlobalPreferencesFragment extends PreferenceFragmentCompat {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (accessibilityPref != null && accessibilityPref.isChecked()
+                && !AccessibilityServiceHelper.isServiceEnabled(requireContext())) {
+            Activity activity = getActivity();
+            if (activity != null) {
+                AccessibilityServiceHelper.showRequiredDialog(activity, () ->
+                        accessibilityPref.setChecked(false));
+            }
+        }
+    }
+
     private void setupUnicodeDisablesAccessibility() {
-        SwitchPreferenceCompat accessibilityPref = findPreference(Constants.useAccessibilityKeyIntercept);
+        accessibilityPref = findPreference(Constants.useAccessibilityKeyIntercept);
         SwitchPreferenceCompat unicodePref = findPreference(Constants.preferSendingUnicode);
         if (accessibilityPref != null && unicodePref != null) {
             boolean unicodeEnabled = unicodePref.isChecked();
-            accessibilityPref.setVisible(!unicodeEnabled);
+            accessibilityPref.setEnabled(!unicodeEnabled);
             if (unicodeEnabled) {
                 accessibilityPref.setChecked(false);
             }
             unicodePref.setOnPreferenceChangeListener((pref, newValue) -> {
                 boolean enabled = (boolean) newValue;
-                accessibilityPref.setVisible(!enabled);
+                accessibilityPref.setEnabled(!enabled);
                 if (enabled) {
                     accessibilityPref.setChecked(false);
+                }
+                return true;
+            });
+
+            accessibilityPref.setOnPreferenceChangeListener((pref, newValue) -> {
+                if ((boolean) newValue && !AccessibilityServiceHelper.isServiceEnabled(requireContext())) {
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        AccessibilityServiceHelper.showRequiredDialog(activity, () ->
+                                accessibilityPref.setChecked(false));
+                    }
                 }
                 return true;
             });
